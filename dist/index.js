@@ -8,14 +8,29 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@mikro-orm/core");
+const Post_1 = require("./entities/Post");
+const mikro_orm_config_1 = __importDefault(require("./mikro-orm.config"));
+const express_1 = __importDefault(require("express"));
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
-    const orm = yield core_1.MikroORM.init({
-        dbName: 'redditz',
-        type: 'postgresql',
-        debug: true
+    const orm = yield core_1.MikroORM.init(mikro_orm_config_1.default);
+    yield orm.getMigrator().up();
+    const generator = orm.getSchemaGenerator();
+    yield generator.updateSchema();
+    const app = (0, express_1.default)();
+    const emFork = orm.em.fork();
+    const post = emFork.create(Post_1.Post, {
+        title: "my first post",
     });
+    yield emFork.persistAndFlush(post);
+    const posts = yield orm.em.getContext().find(Post_1.Post, {});
+    console.log(posts);
 });
-console.log("Hello Wsadsaorld");
+main().catch((err) => {
+    console.error(err);
+});
 //# sourceMappingURL=index.js.map
